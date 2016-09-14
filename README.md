@@ -122,3 +122,25 @@ This repo contains the code presented in the LA AWS Meetup
      c.) node iot_simulator.js
 
   6.) Now you should start seeing the data come through the AWS resources S3, SNS, SQS, DYNAMODB AND LAMBDA
+
+## Optional Angular Portion
+
+  1.) CognitoID
+
+    a.) Login to AWS Cognito
+    b.) Create a new ID Pool under federated IdentityPool
+    c.) Grant the necessary AWS IOT access to the ID Pool
+    d.) Copy the generated CognitoID
+
+
+  2.) Setup angular app
+
+    a.) cd lameetup/angular
+    b.) Open the app.js and update the <youridpool> from CognitoID
+    c.) Open the app.js and update the <youriotendpoint> from AWS Thing Endpoint
+
+  3.) Run
+
+      a.) cd lameetup/angular
+      b.) gulp
+      c.) Open a browser and point it to the Gulp url.
