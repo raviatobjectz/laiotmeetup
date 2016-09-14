@@ -37,10 +37,11 @@ This repo contains the code presented in the LA AWS Meetup
         http://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html
     b.) Rename the downloaded private key to private.pem and save it in laiotmeetup/device/certs folder.
     c.) Rename the downloaded certificate to certificate.crt and save it in laiotmeetup/device/certs folder.
+    d.) Get the certificate ARN for using in step 4.
 
 4.) Creating the AWS resources.
 
-    a.) Create the IOT thing in AWS using the IOT_Meetup_Device.json and the cloudformation GUI on AWS or using the AWS CLI.
+    a.) Create the IOT thing in AWS using the IOT_Meetup_Device.json and the cloudformation GUI on AWS or using the AWS CLI.  You will need to provide the certificate ARN from step 3d as an input parameter.
 
         CLI example
         aws cloudformation create-stack --stack-name myteststack --template-body file:////home//local//test//sampletemplate.json
@@ -93,10 +94,11 @@ This repo contains the code presented in the LA AWS Meetup
          http://docs.aws.amazon.com/iot/latest/developerguide/create-device-certificate.html
      b.) Rename the downloaded private key to private.pem and save it in laiotmeetup/device/certs folder.
      c.) Rename the downloaded certificate to certificate.crt and save it in laiotmeetup/device/certs folder.
+     d.) Get the certificate ARN for using in step 4.
 
  4.) Creating the AWS resources.
 
-     a.) Create the IOT thing in AWS using the IOT_Meetup_Device.json and the cloudformation GUI on AWS or using the AWS CLI.
+     a.) Create the IOT thing in AWS using the IOT_Meetup_Device.json and the cloudformation GUI on AWS or using the AWS CLI. You will need to provide the certificate ARN from step 3d as an input parameter.
 
          CLI example
          aws cloudformation create-stack --stack-name myteststack --template-body file:////home//local//test//sampletemplate.json
