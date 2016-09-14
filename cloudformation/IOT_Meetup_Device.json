@@ -1,0 +1,76 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Resources": {
+
+     "MyThing": {
+         "Type": "AWS::IoT::Thing",
+         "Properties": {
+            "ThingName": {
+              "Ref": "ThingName"
+            }
+         }
+      },
+
+      "MyPolicy": {
+         "Type": "AWS::IoT::Policy",
+         "DependsOn" : "MyThing",
+         "Properties": {
+            "PolicyName": {
+              "Ref": "PolicyName"
+            },
+            "PolicyDocument": {
+               "Version": "2012-10-17",
+               "Statement": [{
+                  "Effect": "Allow",
+                  "Action": [
+                     "iot:*"
+                  ],
+                  "Resource": [
+                     "*"
+                  ]
+               }]
+            }
+         }
+      },
+
+      "MyPolicyPrincipalAttachment": {
+         "Type": "AWS::IoT::PolicyPrincipalAttachment",
+         "DependsOn" : "MyPolicy",
+         "Properties": {
+            "PolicyName": {
+               "Ref": "PolicyName"
+            },
+            "Principal": {
+               "Ref": "CertificateArn"
+            }
+         }
+      },
+
+      "MyThingPrincipalAttachment": {
+         "Type": "AWS::IoT::ThingPrincipalAttachment",
+         "DependsOn" : "MyPolicyPrincipalAttachment",
+         "Properties": {
+            "ThingName": {
+               "Ref": "ThingName"
+            },
+            "Principal": {
+               "Ref": "CertificateArn"
+            }
+         }
+      }
+   },
+   "Parameters": {
+      "ThingName": {
+         "Type": "String",
+         "Default": "IOTTHING"
+      },
+      "CertificateArn": {
+         "Type": "String",
+         "Default": "arn:aws:iot:us-west-2:013022319546:cert/54d12e40d21f6a788f8e646adb37afbc4a080e88c633528d78e320b25a883dae"
+      },
+      "PolicyName": {
+         "Type": "String",
+         "Default": "IOTPOLICY"
+      },
+   }
+}

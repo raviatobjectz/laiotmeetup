@@ -1,0 +1,84 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Resources": {
+
+      "IOTROLE": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": [ "iot.amazonaws.com" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               } ]
+            },
+            "Policies": [ {
+               "PolicyName": {
+                  "Ref": "RoleName"
+               },
+               "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "sqs:*",
+                        "Resource": "*"
+                    }
+                  ]
+               }
+            } ]
+          }
+      },
+
+      "MYIOTSQSQUEUE" : {
+        "Type" : "AWS::SQS::Queue",
+        "DependsOn" : "IOTROLE",
+        "Properties" : {
+           "QueueName" : {
+              "Ref": "SQSName"
+           }
+        }
+      },
+
+      "MYIOTSQSRULE": {
+         "Type": "AWS::IoT::TopicRule",
+         "DependsOn" : "MYIOTSQSQUEUE",
+         "Properties": {
+            "RuleName": {
+               "Ref": "SQSRuleName"
+            },
+            "TopicRulePayload": {
+               "RuleDisabled": "false",
+               "AwsIotSqlVersion": "beta",
+               "Sql": "SELECT * FROM 'MEETUP/IOT/INCOMING/SENSORS/#'",
+               "Actions": [{
+                    "Sqs": {
+                       "QueueUrl": { "Ref" : "MYIOTSQSQUEUE" },
+                       "RoleArn": {
+                         "Fn::GetAtt": ["IOTROLE", "Arn"]
+                       }
+                    }
+               }]
+            }
+         }
+      }
+
+   },
+   "Parameters": {
+      "SQSName": {
+         "Type": "String",
+         "Default": "IOTQUEUE"
+      },
+      "SQSRuleName": {
+         "Type": "String",
+         "Default": "IOTSQSRULE"
+      },
+      "RoleName": {
+         "Type": "String",
+         "Default": "IOTSQSROLE"
+      }
+   }
+}

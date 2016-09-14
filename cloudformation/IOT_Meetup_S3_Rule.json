@@ -1,0 +1,77 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Resources": {
+
+      "IOTROLE": {
+         "Type": "AWS::IAM::Role",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": [ "iot.amazonaws.com" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               } ]
+            },
+            "Policies": [ {
+               "PolicyName": {
+                  "Ref": "RoleName"
+               },
+               "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "s3:*",
+                        "Resource": "*"
+                    }
+                  ]
+               }
+            } ]
+          }
+      },
+
+      "MYIOTS3RULE": {
+         "Type": "AWS::IoT::TopicRule",
+         "DependsOn" : "IOTROLE",
+         "Properties": {
+            "RuleName": {
+               "Ref": "S3RuleName"
+            },
+            "TopicRulePayload": {
+               "RuleDisabled": "false",
+               "AwsIotSqlVersion": "beta",
+               "Sql": "SELECT * FROM 'MEETUP/IOT/INCOMING/SENSORS/#'",
+               "Actions": [{
+                   "S3": {
+                       "RoleArn": {
+                          "Fn::GetAtt": ["IOTROLE", "Arn"]
+                       },
+                       "BucketName": {
+                         "Ref": "S3BucketName"
+                       },
+                       "Key": "${topic()}/${timestamp()}"
+                   }
+               }]
+            }
+         }
+      },
+   },
+   "Parameters": {
+      "S3RuleName": {
+         "Type": "String",
+         "Default": "IOTS3RULE"
+      },
+      "RoleName": {
+         "Type": "String",
+         "Default": "IOTS3ROLE"
+      },
+      "S3BucketName": {
+         "Type": "String",
+         "Default": "iotmeetup"
+      }
+
+   }
+}

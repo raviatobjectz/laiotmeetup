@@ -1,0 +1,98 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Resources": {
+
+     "MySNSTopic" : {
+       "Type" : "AWS::SNS::Topic",
+       "Properties" : {
+          "Subscription" : [
+            {
+               "Endpoint" : {
+                  "Ref": "TOPPICENDPOINT"
+               },
+               "Protocol" : "email"
+            }
+          ],
+          "TopicName" : {
+             "Ref": "TopicName"
+          }
+       }
+     },
+
+      "IOTROLE": {
+         "Type": "AWS::IAM::Role",
+         "DependsOn" : "MySNSTopic",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": [ "iot.amazonaws.com" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               } ]
+            },
+            "Policies": [ {
+               "PolicyName": {
+                  "Ref": "RoleName"
+               },
+               "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "sns:*",
+                        "Resource": "*"
+                    }
+                  ]
+               }
+            } ]
+          }
+      },
+
+      "MYIOTSNSRULE": {
+         "Type": "AWS::IoT::TopicRule",
+         "DependsOn" : "IOTROLE",
+         "Properties": {
+            "RuleName": {
+               "Ref": "SNSRuleName"
+            },
+            "TopicRulePayload": {
+               "RuleDisabled": "false",
+               "AwsIotSqlVersion": "beta",
+               "Sql": "SELECT * FROM 'MEETUP/IOT/INCOMING/SENSORS/TOUCH' WHERE VALUE > 0",
+               "Actions": [{
+                  "Sns": {
+                     "RoleArn": {
+                        "Fn::GetAtt": ["IOTROLE", "Arn"]
+                     },
+                     "TargetArn": {
+                        "Ref": "MySNSTopic"
+                     }
+                  }
+               }]
+            }
+         }
+      }
+
+   },
+   "Parameters": {
+      "TopicName": {
+         "Type": "String",
+         "Default": "IOTTOPIC"
+      },
+      "SNSRuleName": {
+         "Type": "String",
+         "Default": "IOTSNSRULE"
+      },
+      "TOPPICENDPOINT": {
+         "Type": "String",
+         "Default": "youremail@domain.com"
+      },
+      "RoleName": {
+         "Type": "String",
+         "Default": "IOTSNSROLE"
+      }
+   }
+}

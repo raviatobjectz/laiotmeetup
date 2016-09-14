@@ -1,0 +1,185 @@
+{
+   "AWSTemplateFormatVersion": "2010-09-09",
+   "Resources": {
+
+     "myiottable" : {
+       "Type" : "AWS::DynamoDB::Table",
+       "Properties" : {
+         "TableName" : {
+            "Ref": "TableName"
+         },
+         "ProvisionedThroughput" : {
+            "ReadCapacityUnits" : 1,
+            "WriteCapacityUnits" : 1
+         },
+         "AttributeDefinitions" : [
+           {
+             "AttributeName" : "DEVICEID",
+             "AttributeType" : "S"
+           },
+           {
+             "AttributeName" : "SENSOR",
+             "AttributeType" : "S"
+           }
+         ],
+         "KeySchema" : [
+           {
+             "AttributeName" : "DEVICEID",
+             "KeyType" : "HASH"
+           },
+           {
+             "AttributeName" : "SENSOR",
+             "KeyType" : "RANGE"
+           }
+         ]
+       }
+     },
+
+     "myiottable2" : {
+       "Type" : "AWS::DynamoDB::Table",
+       "DependsOn" : "myiottable",
+       "Properties" : {
+         "TableName" : {
+            "Ref": "TableName2"
+         },
+         "ProvisionedThroughput" : {
+            "ReadCapacityUnits" : 1,
+            "WriteCapacityUnits" : 1
+         },
+         "AttributeDefinitions" : [
+           {
+             "AttributeName" : "DEVICEID",
+             "AttributeType" : "S"
+           },
+           {
+             "AttributeName" : "TIMESTAMP",
+             "AttributeType" : "S"
+           }
+         ],
+         "KeySchema" : [
+           {
+             "AttributeName" : "DEVICEID",
+             "KeyType" : "HASH"
+           },
+           {
+             "AttributeName" : "TIMESTAMP",
+             "KeyType" : "RANGE"
+           }
+         ]
+       }
+     },
+
+      "IOTROLE": {
+         "Type": "AWS::IAM::Role",
+         "DependsOn" : "myiottable2",
+         "Properties": {
+            "AssumeRolePolicyDocument": {
+               "Version" : "2012-10-17",
+               "Statement": [ {
+                  "Effect": "Allow",
+                  "Principal": {
+                     "Service": [ "iot.amazonaws.com" ]
+                  },
+                  "Action": [ "sts:AssumeRole" ]
+               } ]
+            },
+            "Policies": [ {
+               "PolicyName": {
+                  "Ref": "RoleName"
+               },
+               "PolicyDocument": {
+                  "Version" : "2012-10-17",
+                  "Statement": [
+                    {
+                        "Effect": "Allow",
+                        "Action": "dynamodb:*",
+                        "Resource": "*"
+                    }
+                  ]
+               }
+            } ]
+          }
+      },
+
+      "MYIOTDYNAMORULE": {
+         "Type": "AWS::IoT::TopicRule",
+         "DependsOn" : "IOTROLE",
+         "Properties": {
+            "RuleName": {
+               "Ref": "DBRuleName"
+            },
+            "TopicRulePayload": {
+               "RuleDisabled": "false",
+               "AwsIotSqlVersion": "beta",
+               "Sql": "SELECT * FROM 'MEETUP/IOT/#'",
+               "Actions": [{
+                  "DynamoDB": {
+                       "HashKeyField": "DEVICEID",
+                       "HashKeyValue": "${DEVICEID}",
+                       "RangeKeyField": "TIMESTAMP",
+                       "RangeKeyValue": "${TIMESTAMP}",
+                       "RoleArn": {
+                          "Fn::GetAtt": ["IOTROLE", "Arn"]
+                       },
+                       "TableName": {
+                          "Ref": "TableName2"
+                       }
+                  }
+               }]
+            }
+         }
+      },
+
+      "MYIOTDYNAMORULE2": {
+         "Type": "AWS::IoT::TopicRule",
+         "DependsOn" : "IOTROLE",
+         "Properties": {
+            "RuleName": {
+               "Ref": "DBRuleName2"
+            },
+            "TopicRulePayload": {
+               "RuleDisabled": "false",
+               "AwsIotSqlVersion": "beta",
+               "Sql": "SELECT * FROM 'MEETUP/IOT/#'",
+               "Actions": [{
+                  "DynamoDB": {
+                       "HashKeyField": "DEVICEID",
+                       "HashKeyValue": "${DEVICEID}",
+                       "RangeKeyField": "SENSOR",
+                       "RangeKeyValue": "${SENSOR}",
+                       "RoleArn": {
+                          "Fn::GetAtt": ["IOTROLE", "Arn"]
+                       },
+                       "TableName": {
+                          "Ref": "TableName"
+                       }
+                  }
+               }]
+            }
+         }
+      }
+
+   },
+   "Parameters": {
+      "TableName": {
+         "Type": "String",
+         "Default": "IOTTABLE"
+      },
+      "TableName2": {
+         "Type": "String",
+         "Default": "IOTTRANSTABLE"
+      },
+      "DBRuleName": {
+         "Type": "String",
+         "Default": "IOTDBRULE"
+      },
+      "DBRuleName2": {
+         "Type": "String",
+         "Default": "IOTDBTRANSRULE"
+      },
+      "RoleName": {
+         "Type": "String",
+         "Default": "IOTDYNAMOROLE"
+      }
+   }
+}
