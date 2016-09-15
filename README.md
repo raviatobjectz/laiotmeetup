@@ -130,6 +130,7 @@ This repo contains the code presented in the LA AWS Meetup
     a.) Login to AWS Cognito
     b.) Create a new ID Pool under federated IdentityPool
     c.) Grant the necessary AWS IOT access to the ID Pool
+        Note : The example currently uses unauthenticated access for simplicity. So you can either update the app.js with the authenticated access code or you can provide the necessary policy for the unauthenticated access on the cognito identitypool.
     d.) Copy the generated CognitoID
 
 
